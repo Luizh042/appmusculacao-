@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,6 +34,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.appmusculacao.ui.theme.AppmusculacaoTheme
 
 class MainActivity : ComponentActivity() {
@@ -40,14 +44,35 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RegisterScreen(
-                onRegisterClick = {name, email, password ->
-                    Log.d("Register", "Nome: $name, Email: $email, senha: $password")
-                },
-                onLoginClick = {
-                    Log.d("Register", "Ir para tela de login")
+            val navController = rememberNavController()
+
+            NavHost(navController, startDestination = "register") {
+                composable("register") {
+                    RegisterScreen(
+                        onRegisterClick = { name, email, password ->
+                            // Aqui pode fazer o cadastro e redirecionar
+                            Log.d("Register", "Nome: $name, Email: $email")
+                            navController.navigate("login")
+                        },
+                        onLoginClick = {
+                            navController.navigate("login")
+                        }
+                    )
                 }
-            )
+                composable("login") {
+                    LoginScreen(
+                        onLoginSuccess = {
+                            // Redirecionar para próxima tela após login
+                            Log.d("Login", "Login realizado com sucesso")
+                        },
+                        onBackToRegister = {
+                            navController.navigate("register") {
+                                popUpTo("register") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -60,20 +85,15 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-
-    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center
     ) {
-        Text("Crie sua conta", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Text("Criar Conta", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = name,
@@ -81,52 +101,123 @@ fun RegisterScreen(
             label = { Text("Nome") },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("E-mail") },
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Senha") },
-            modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            modifier = Modifier.fillMaxWidth()
         )
-
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = { Text("Confirmar Senha") },
-            modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                if (password == confirmPassword) {
+                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
                     onRegisterClick(name, email, password)
-                } else {
-                    Toast.makeText(context, "Senhas não coincidem", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Registrar")
+            Text("Criar Conta")
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         TextButton(onClick = onLoginClick) {
-            Text("Já tem uma conta? Entrar")
+            Text("Já tenho uma conta")
+        }
+    }
+}
+
+@Composable
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onBackToRegister: () -> Unit
+) {
+    var currentStep by remember { mutableStateOf(1) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        when (currentStep) {
+            1 -> {
+                Text("Digite seu e-mail", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("E-mail") },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        if (email.isNotBlank()) {
+                            currentStep = 2
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Continuar")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = { onBackToRegister() }) {
+                    Text("Ainda não tem uma conta? Cadastre-se")
+                }
+            }
+
+            2 -> {
+                Text("Digite sua senha", style = MaterialTheme.typography.headlineMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Senha") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        if (password.isNotBlank()) {
+                            onLoginSuccess()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Entrar")
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = {
+                    currentStep = 1
+                    password = ""
+                }) {
+                    Text("Voltar")
+                }
+            }
         }
     }
 }

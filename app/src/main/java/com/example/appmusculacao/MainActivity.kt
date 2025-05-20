@@ -1,13 +1,16 @@
 package com.example.appmusculacao
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -22,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,8 +43,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.appmusculacao.ui.theme.AppmusculacaoTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -71,6 +81,9 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     )
+                }
+                composable("workout") {
+                    WorkoutScreen()
                 }
             }
         }
@@ -217,6 +230,102 @@ fun LoginScreen(
                 }) {
                     Text("Voltar")
                 }
+            }
+        }
+    }
+}
+
+data class Exercise(
+    val name: String,
+    val repetitions: Int,
+    val series: Int,
+    val intervalSeconds: Int,
+    var paid: Boolean = false
+)
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun WorkoutScreen() {
+    val dateNow = remember { LocalDate.now() }
+    val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+    val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
+
+    val exercises = remember {
+        mutableStateListOf(
+            Exercise("Supino Reto", 12, 4, 60),
+            Exercise("Agachamento", 12, 3, 90),
+            Exercise("Rosca Direta", 15, 4, 45),
+            Exercise("Puxada Alta", 12, 4, 60),
+            Exercise("Remada Curvada", 10, 4, 60),
+            Exercise("Desenvolvimento", 12, 4, 60)
+        )
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Exercícios", style = MaterialTheme.typography.headlineSmall)
+        Text(dayOfWeek.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium)
+        Text(formattedDate, style = MaterialTheme.typography.bodySmall)
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Pago:")
+            Checkbox(
+                checked = exercises.all { it.paid },
+                onCheckedChange = { isChecked ->
+                    exercises.forEachIndexed { index, ex ->
+                        exercises[index] = ex.copy(paid = isChecked)
+                    }
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        exercises.forEachIndexed { index, exercise ->
+            ExerciseCard(
+                exercise = exercise,
+                onPaidChange = { isChecked ->
+                    exercises[index] = exercise.copy(paid = isChecked)
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun ExerciseCard(exercise: Exercise, onPaidChange: (Boolean) -> Unit) {
+    androidx.compose.material3.Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        elevation = androidx.compose.material3.CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(exercise.name, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Pago: ")
+                    Checkbox(checked = exercise.paid, onCheckedChange = onPaidChange)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Repetições: ${exercise.repetitions}")
+                Text("Séries: ${exercise.series}", color = androidx.compose.ui.graphics.Color(0xFFCCE075))
+                Text("Intervalo: ${exercise.intervalSeconds}s", color = androidx.compose.ui.graphics.Color(0xFFFFBDBD))
             }
         }
     }

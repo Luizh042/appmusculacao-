@@ -1,5 +1,6 @@
 package com.example.appmusculacao
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -48,6 +49,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.appmusculacao.ui.theme.AppmusculacaoTheme
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -289,11 +292,123 @@ fun CalendarScreen(markedDates: List<LocalDate>) {
     }
 }
 
+data class ExerciseModel(
+    val name: String,
+    val pago: Boolean,
+    val repeticoes: Int,
+    val series: Int,
+    val intervalo: Double
+)
+
+class ExerciseStore(context: Context) {
+    private val prefs = context.getSharedPreferences("exercises", Context.MODE_PRIVATE)
+    private val gson = Gson()
+
+    fun save(exercises: List<ExerciseModel>) {
+        val json = gson.toJson(exercises)
+        prefs.edit().putString("exercise_list", json).apply()
+    }
+
+    fun load(): List<ExerciseModel> {
+        val json = prefs.getString("exercise_list", null) ?: return emptyList()
+        return gson.fromJson(json, object : TypeToken<List<ExerciseModel>>() {}.type)
+    }
+}
+
+@Composable
+fun ExerciseFormView(
+    initial: ExerciseModel? = null,
+    onSave: (ExerciseModel) -> Unit,
+    onCancel: () -> Unit
+) {
+    var name by remember { mutableStateOf(initial?.name ?: "") }
+    var pago by remember { mutableStateOf(initial?.pago ?: false) }
+    var repeticoes by remember { mutableStateOf(initial?.repeticoes?.toString() ?: "") }
+    var series by remember { mutableStateOf(initial?.series?.toString() ?: "") }
+    var intervalo by remember { mutableStateOf(initial?.intervalo?.toString() ?: "") }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Formulário de Exercício", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+
+        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") })
+        OutlinedTextField(value = repeticoes, onValueChange = { repeticoes = it }, label = { Text("Repetições") })
+        OutlinedTextField(value = series, onValueChange = { series = it }, label = { Text("Séries") })
+        OutlinedTextField(value = intervalo, onValueChange = { intervalo = it }, label = { Text("Intervalo (s)") })
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = pago, onCheckedChange = { pago = it })
+            Text("Pago")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            if (name.isNotBlank() && repeticoes.isNotBlank() && series.isNotBlank() && intervalo.isNotBlank()) {
+                onSave(
+                    ExerciseModel(
+                        name,
+                        pago,
+                        repeticoes.toInt(),
+                        series.toInt(),
+                        intervalo.toDouble()
+                    )
+                )
+            }
+        }) {
+            Text("Salvar")
+        }
+
+        TextButton(onClick = onCancel) {
+            Text("Cancelar")
+        }
+    }
+}
+
+@Composable
+fun ExerciseListView(context: Context) {
+    val store = remember { ExerciseStore(context) }
+    val exercises = remember { mutableStateListOf<ExerciseModel>().apply { addAll(store.load()) } }
+    var showForm by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Lista de Exercícios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+
+        exercises.forEachIndexed { index, exercise ->
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("${exercise.name} (${exercise.series}x${exercise.repeticoes}) - ${exercise.intervalo}s")
+                TextButton(onClick = {
+                    exercises.removeAt(index)
+                    store.save(exercises)
+                }) {
+                    Text("Remover")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(onClick = { showForm = true }) {
+            Text("Adicionar Exercício")
+        }
+
+        if (showForm) {
+            ExerciseFormView(
+                onSave = {
+                    exercises.add(it)
+                    store.save(exercises)
+                    showForm = false
+                },
+                onCancel = { showForm = false }
+            )
+        }
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun RegisterScreenPreview() {
-    RegisterScreen(
-        onRegisterClick = { _, _, _ -> },
-        onLoginClick = {}
-    )
+fun ExerciseListViewPreview() {
+    ExerciseListView(context = LocalContext.current)
 }

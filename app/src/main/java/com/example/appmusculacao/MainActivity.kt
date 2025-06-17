@@ -409,6 +409,9 @@ fun ExerciseListView(context: Context) {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun ExerciseListViewPreview() {
-    ExerciseListView(context = LocalContext.current)
+fun RegisterScreenPreview() {
+    RegisterScreen(
+        onRegisterClick = { _, _, _ -> },
+        onLoginClick = {}
+    )
 }

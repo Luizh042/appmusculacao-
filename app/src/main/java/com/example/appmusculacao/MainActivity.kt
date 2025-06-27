@@ -69,7 +69,15 @@ class MainActivity : ComponentActivity() {
             NavHost(navController, startDestination = "register") {
                 composable("register") {
                     RegisterScreen(
-                        onRegisterClick = { _, _, _ -> navController.navigate("login") },
+                        onRegisterClick = { name, email, password ->
+
+                            var interactor = RegisterInteractor()
+                            interactor.register(name,password,email) // testado
+                            //sucesso
+
+                            //error
+
+                                          },
                         onLoginClick = { navController.navigate("login") }
                     )
                 }
@@ -409,9 +417,12 @@ fun ExerciseListView(context: Context) {
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun RegisterScreenPreview() {
+fun RegisterScreenPreview(){
     RegisterScreen(
-        onRegisterClick = { _, _, _ -> },
+        onRegisterClick = {name, _, _ ->
+            println("login ${name.uppercase()}")
+        },
         onLoginClick = {}
     )
+
 }

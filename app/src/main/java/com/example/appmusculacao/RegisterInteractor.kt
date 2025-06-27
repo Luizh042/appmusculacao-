@@ -34,4 +34,17 @@ class RegisterInteractor {
             output?.onRegisterFailure("Dados inválidos")
         }
     }
+
+    fun paid(paid: Boolean, user: User) {
+        // Simula o registro e retorna sucesso
+        if (paid) {
+            var workout = Workout(
+                paid = paid,
+                user = user
+            )
+            output?.onRegisterSuccess(user)
+        } else {
+            output?.onRegisterFailure("Dados inválidos")
+        }
+    }
 }

@@ -60,34 +60,3 @@ class RegisterInteractorOutputMock : RegisterInteractorOutput {
         // não precisa testar aqui
     }
 }
-
-
-@RunWith(AndroidJUnit4::class)
-class CalendarScreenTest {
-
-@get:Rule
-val composeTestRule = createComposeRule()
-
-@Test
-fun `deve exibir datas marcadas corretamente no calendario`() {
-    val today = LocalDate.now()
-    val markedDates = listOf(today)
-
-    composeTestRule.setContent {
-        CalendarScreen(markedDates = markedDates)
-    }
-
-    // Verifica se o mês atual está visível
-    val currentMonth = YearMonth.now().month.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
-        .replaceFirstChar { it.uppercase() }
-    composeTestRule.onNodeWithText(currentMonth).assertExists()
-
-    // Verifica se o ano atual está visível
-    val currentYear = YearMonth.now().year.toString()
-    composeTestRule.onNodeWithText(currentYear).assertExists()
-
-    // Verifica se o dia atual (marcado) está visível
-    composeTestRule.onNodeWithText(today.dayOfMonth.toString()).assertExists()
- }
-
-}

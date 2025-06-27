@@ -53,6 +53,8 @@ dependencies {
     implementation ("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.kizitonwose.calendar:compose:2.4.0")
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.androidx.ui.test.junit4.android)
+    testImplementation ("junit:junit:4.13.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

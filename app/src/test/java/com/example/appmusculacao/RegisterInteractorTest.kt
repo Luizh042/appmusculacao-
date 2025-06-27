@@ -55,6 +55,15 @@ class RegisterInteractorTest {
 
         assertTrue(mockOutput.didRegisterUser)
     }
+    @Test
+    fun `deve cadastrar agenda usuario com dados válidos`() {
+
+        val user = User(id = "1", username = "Luiz", password = "luiz@#$", email = "luiz@email.com")
+
+        interactor.calendar(user)
+
+        assertTrue(mockOutput.didRegisterUser)
+    }
 }
 
 // MOCK para validar se o interactor chamou corretamente o output

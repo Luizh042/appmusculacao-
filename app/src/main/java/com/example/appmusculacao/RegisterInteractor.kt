@@ -47,4 +47,15 @@ class RegisterInteractor {
             output?.onRegisterFailure("Dados inválidos")
         }
     }
+    fun calendar(user: User) {
+        // Simula o registro e retorna sucesso
+        if (true) {
+            var calendar = Calendar(
+                user = user
+            )
+            output?.onRegisterSuccess(user)
+        } else {
+            output?.onRegisterFailure("Dados inválidos")
+        }
+    }
 }

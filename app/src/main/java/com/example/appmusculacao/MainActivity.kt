@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                             interactor.register(name,password,email) // testado
                             //sucesso
 
-                            //error
+                            //error falta a implementação
 
                                           },
                         onLoginClick = { navController.navigate("login") }

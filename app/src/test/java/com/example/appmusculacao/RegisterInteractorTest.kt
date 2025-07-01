@@ -4,6 +4,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -13,6 +14,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import kotlin.test.assertEquals
 
 class RegisterInteractorTest {
 
@@ -35,6 +37,33 @@ class RegisterInteractorTest {
         interactor.register(username, password, email)
 
         assertTrue(mockOutput.didRegisterUser)
+    }
+
+    @Test
+    fun `nao deve registrar usuario com dados inválidos`() {
+        var didRegisterUser = false
+        var didFailRegister = false
+        var errorMessage: String? = null
+
+        val mockOutput = object : RegisterInteractorOutput {
+            override fun onRegisterSuccess(user: User) {
+                didRegisterUser = true
+            }
+
+            override fun onRegisterFailure(error: String) {
+                didFailRegister = true
+                errorMessage = error
+            }
+        }
+
+        val interactor = RegisterInteractor()
+        interactor.output = mockOutput
+
+        interactor.register("", "senha123", "email@email.com")
+
+        assertFalse(didRegisterUser)
+        assertTrue(didFailRegister)
+        assertEquals("Dados inválidos", errorMessage)
     }
 
     @Test

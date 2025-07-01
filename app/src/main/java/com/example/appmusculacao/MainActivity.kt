@@ -71,13 +71,23 @@ class MainActivity : ComponentActivity() {
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
 
-                            var interactor = RegisterInteractor()
-                            interactor.register(name,password,email) // testado
-                            //sucesso
+                            val interactor = RegisterInteractor()
 
-                            //error falta a implementação
+                            interactor.output = object : RegisterInteractorOutput {
+                                override fun onRegisterSuccess(user: User) {
+                                    // Sucesso já estava implementado (mantido como no seu código original)
+                                    println("Usuário registrado com sucesso: ${user.username}")
+                                }
 
-                                          },
+                                override fun onRegisterFailure(error: String) {
+                                    // Nova parte: trata erro no registro
+                                    println("Erro no registro: $error")
+                                }
+                            }
+
+                            interactor.register(name, password, email) // testado
+
+                        },
                         onLoginClick = { navController.navigate("login") }
                     )
                 }

@@ -68,6 +68,9 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController, startDestination = "register") {
                 composable("register") {
+
+                    val context = LocalContext.current //aqui e para usarmos o Toast
+
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
 
@@ -75,13 +78,22 @@ class MainActivity : ComponentActivity() {
 
                             interactor.output = object : RegisterInteractorOutput {
                                 override fun onRegisterSuccess(user: User) {
-                                    // Sucesso já estava implementado (mantido como no seu código original)
-                                    println("Usuário registrado com sucesso: ${user.username}")
+                                    // Sucesso já estava implementado
+                                    Toast.makeText(
+                                        context,
+                                        "Usuario logado com sucesso",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    navController.navigate("login")
                                 }
 
                                 override fun onRegisterFailure(error: String) {
-                                    // Nova parte: trata erro no registro
-                                    println("Erro no registro: $error")
+                                    //erro no registro
+                                    Toast.makeText(
+                                        context,
+                                        "erro de registro: $error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
 

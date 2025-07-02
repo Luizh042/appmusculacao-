@@ -3,7 +3,6 @@ package com.example.appmusculacao
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,7 +25,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.appmusculacao.ui.theme.AppmusculacaoTheme
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import java.time.LocalDate
@@ -74,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
 
-                            val interactor = RegisterInteractor()
+                            val interactor = RegisterInteractor(context)
 
                             interactor.output = object : RegisterInteractorOutput {
                                 override fun onRegisterSuccess(user: User) {

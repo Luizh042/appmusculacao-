@@ -12,13 +12,11 @@ class RegisterInteractorTest {
 
     private lateinit var interactor: RegisterInteractor
     private lateinit var mockOutput: RegisterInteractorOutputMock
-    private lateinit var context: Context
 
     @Before
     fun setUp() {
-        context = ApplicationProvider.getApplicationContext()
         mockOutput = RegisterInteractorOutputMock()
-        interactor = RegisterInteractor(context)
+        interactor = RegisterInteractor()
         interactor.output = mockOutput
     }
 
@@ -30,8 +28,7 @@ class RegisterInteractorTest {
 
         interactor.register(username, password, email)
 
-        val resultadoEmail = UserStorage.getUserEmail(context)
-        assertEquals(email, resultadoEmail)
+        assertTrue(mockOutput.didRegisterUser)
     }
 
     @Test
@@ -51,7 +48,7 @@ class RegisterInteractorTest {
             }
         }
 
-        val interactor = RegisterInteractor(context)
+        val interactor = RegisterInteractor()
         interactor.output = mockOutput
 
         interactor.register("", "senha123", "email@email.com")

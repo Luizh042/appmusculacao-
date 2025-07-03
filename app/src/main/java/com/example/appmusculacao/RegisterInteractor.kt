@@ -1,6 +1,8 @@
 package com.example.appmusculacao
 
-class RegisterInteractor {
+import android.content.Context
+
+class RegisterInteractor(context: Context) {
 
     var output: RegisterInteractorOutput? = null
 

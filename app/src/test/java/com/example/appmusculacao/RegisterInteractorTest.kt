@@ -1,30 +1,24 @@
 package com.example.appmusculacao
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.test.assertEquals
 
 class RegisterInteractorTest {
 
     private lateinit var interactor: RegisterInteractor
     private lateinit var mockOutput: RegisterInteractorOutputMock
+    private lateinit var context: Context
 
     @Before
     fun setUp() {
+        context = ApplicationProvider.getApplicationContext()
         mockOutput = RegisterInteractorOutputMock()
-        interactor = RegisterInteractor()
+        interactor = RegisterInteractor(context)
         interactor.output = mockOutput
     }
 
@@ -36,7 +30,8 @@ class RegisterInteractorTest {
 
         interactor.register(username, password, email)
 
-        assertTrue(mockOutput.didRegisterUser)
+        val resultadoEmail = UserStorage.getUserEmail(context)
+        assertEquals(email, resultadoEmail)
     }
 
     @Test
@@ -56,7 +51,7 @@ class RegisterInteractorTest {
             }
         }
 
-        val interactor = RegisterInteractor()
+        val interactor = RegisterInteractor(context)
         interactor.output = mockOutput
 
         interactor.register("", "senha123", "email@email.com")

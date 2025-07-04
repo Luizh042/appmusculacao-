@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
 
-                            val interactor = RegisterInteractor()
+                            val interactor = RegisterInteractor(context)
 
                             interactor.output = object : RegisterInteractorOutput {
                                 override fun onRegisterSuccess(user: User) {

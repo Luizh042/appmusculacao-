@@ -2,12 +2,11 @@ package com.example.appmusculacao
 
 import android.content.Context
 
-class RegisterInteractor {
+class RegisterInteractor(private val context: Context) {
 
     var output: RegisterInteractorOutput? = null
 
     fun register(username: String, password: String, email: String) {
-        // Simula o registro e retorna sucesso
         if (username.isNotBlank() && password.isNotBlank() && email.isNotBlank()) {
             val user = User(
                 id = "1",
@@ -15,10 +14,13 @@ class RegisterInteractor {
                 password = password,
                 email = email
             )
-            // bancos de dados
+            
+            // Save user data
+            UserStorage.saveUser(context, username, email, password)
+            
             output?.onRegisterSuccess(user)
         } else {
-            output?.onRegisterFailure("Dados inválidos")
+            output?.onRegisterFailure("Invalid data: all fields are required")
         }
     }
 

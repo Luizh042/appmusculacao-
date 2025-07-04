@@ -3,10 +3,10 @@ package com.example.appmusculacao
 import android.content.Context
 
 object UserStorage {
-    private const val PREFS_NAME = "user_prefs"
-    private const val KEY_NAME = "name"
-    private const val KEY_EMAIL = "email"
-    private const val KEY_PASSWORD = "password"
+    const val PREFS_NAME = "user_prefs"
+    const val KEY_NAME = "name"
+    const val KEY_EMAIL = "email"
+    const val KEY_PASSWORD = "password"
 
     fun saveUser(context: Context, name: String, email: String, password: String) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.appmusculacao"
-    compileSdk = 35
+    compileSdkVersion(rootProject.extra["compileSdkVersion"] as Int)
 
     defaultConfig {
         applicationId = "com.example.appmusculacao"
@@ -30,14 +30,20 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+    }
+
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(17))
+        }
     }
 }
 
@@ -65,4 +71,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(kotlin("test"))
+    testImplementation("org.mockito:mockito-inline:5.2.0")
 }

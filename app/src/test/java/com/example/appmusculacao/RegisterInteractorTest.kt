@@ -32,7 +32,7 @@ class RegisterInteractorTest {
     }
 
     private fun setupSharedPreferencesMocks() {
-        // Configure SharedPreferences mock behavior
+
         Mockito.`when`(mockContext.getSharedPreferences(UserStorage.PREFS_NAME, Context.MODE_PRIVATE)).thenReturn(mockPrefs)
         Mockito.`when`(mockPrefs.edit()).thenReturn(mockEditor)
         Mockito.`when`(mockEditor.putString(Mockito.anyString(), Mockito.anyString())).thenReturn(mockEditor)
@@ -47,30 +47,30 @@ class RegisterInteractorTest {
 
     @Test
     fun `should register user with valid data`() {
-        // Given
+
         val username = "test_user"
         val password = "test123!@#"
         val email = "test@example.com"
 
-        // When
+
         interactor.register(username, password, email)
 
-        // Then
+
         verifyUserStorageInteractions(username, email, password)
         assertTrue("Output should indicate successful registration", mockOutput.didRegisterUser)
     }
 
     @Test
     fun `should not register user with empty data`() {
-        // Given
+
         val username = ""
         val password = "test123"
         val email = "test@example.com"
 
-        // When
+
         interactor.register(username, password, email)
 
-        // Then
+
         verifyNoSharedPreferencesInteractions()
         assertFalse("Output should not indicate successful registration", mockOutput.didRegisterUser)
     }
@@ -89,7 +89,7 @@ class RegisterInteractorTest {
     }
 }
 
-// Mock implementation of the output interface
+
 class RegisterInteractorOutputMock : RegisterInteractorOutput {
     var didRegisterUser = false
 
@@ -162,7 +162,7 @@ class LoginInteractorTest {
     }
 }
 
-// Mock implementation of the output interface
+
 class LoginInteractorOutputMock : LoginInteractorOutput {
     var didLoginUser = false
     var user: User? = null

@@ -1,72 +1,94 @@
 package com.example.appmusculacao
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
-import androidx.test.ext.junit.runners.AndroidJUnit4
+import android.content.Context
+import android.content.SharedPreferences
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.format.TextStyle
-import java.util.Locale
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 
 class RegisterInteractorTest {
-
     private lateinit var interactor: RegisterInteractor
     private lateinit var mockOutput: RegisterInteractorOutputMock
 
+    @Mock
+    private lateinit var mockContext: Context
+    
+    @Mock
+    private lateinit var mockPrefs: SharedPreferences
+    
+    @Mock
+    private lateinit var mockEditor: SharedPreferences.Editor
+
     @Before
     fun setUp() {
+        MockitoAnnotations.openMocks(this)
+        setupSharedPreferencesMocks()
+        setupInteractor()
+    }
+
+    private fun setupSharedPreferencesMocks() {
+        // Configure SharedPreferences mock behavior
+        Mockito.`when`(mockContext.getSharedPreferences(UserStorage.PREFS_NAME, Context.MODE_PRIVATE)).thenReturn(mockPrefs)
+        Mockito.`when`(mockPrefs.edit()).thenReturn(mockEditor)
+        Mockito.`when`(mockEditor.putString(Mockito.anyString(), Mockito.anyString())).thenReturn(mockEditor)
+        Mockito.`when`(mockEditor.apply()).then { }
+    }
+
+    private fun setupInteractor() {
         mockOutput = RegisterInteractorOutputMock()
-        interactor = RegisterInteractor()
+        interactor = RegisterInteractor(mockContext)
         interactor.output = mockOutput
     }
 
     @Test
-    fun `deve registrar usuario com dados válidos`() {
-        val username = "Luiz"
-        val password = "luiz@#$"
-        val email = "luiz@email.com"
+    fun `should register user with valid data`() {
+        // Given
+        val username = "test_user"
+        val password = "test123!@#"
+        val email = "test@example.com"
 
+        // When
         interactor.register(username, password, email)
 
-        assertTrue(mockOutput.didRegisterUser)
+        // Then
+        verifyUserStorageInteractions(username, email, password)
+        assertTrue("Output should indicate successful registration", mockOutput.didRegisterUser)
     }
 
     @Test
-    fun `deve logar usuario com dados válidos`() {
-        val username = "Luiz"
-        val password = "luiz@#$"
+    fun `should not register user with empty data`() {
+        // Given
+        val username = ""
+        val password = "test123"
+        val email = "test@example.com"
 
-        interactor.login(username, password)
+        // When
+        interactor.register(username, password, email)
 
-        assertTrue(mockOutput.didRegisterUser)
+        // Then
+        verifyNoSharedPreferencesInteractions()
+        assertFalse("Output should not indicate successful registration", mockOutput.didRegisterUser)
     }
-    @Test
-    fun `deve cadastrar usuario com dados válidos`() {
-        val paid = true
-        val user = User(id = "1", username = "Luiz", password = "luiz@#$", email = "luiz@email.com")
 
-        interactor.paid(paid, user)
-
-        assertTrue(mockOutput.didRegisterUser)
+    private fun verifyUserStorageInteractions(username: String, email: String, password: String) {
+        Mockito.verify(mockContext).getSharedPreferences(UserStorage.PREFS_NAME, Context.MODE_PRIVATE)
+        Mockito.verify(mockPrefs).edit()
+        Mockito.verify(mockEditor).putString(UserStorage.KEY_NAME, username)
+        Mockito.verify(mockEditor).putString(UserStorage.KEY_EMAIL, email)
+        Mockito.verify(mockEditor).putString(UserStorage.KEY_PASSWORD, password)
+        Mockito.verify(mockEditor).apply()
     }
-    @Test
-    fun `deve cadastrar agenda usuario com dados válidos`() {
 
-        val user = User(id = "1", username = "Luiz", password = "luiz@#$", email = "luiz@email.com")
-
-        interactor.calendar(user)
-
-        assertTrue(mockOutput.didRegisterUser)
+    private fun verifyNoSharedPreferencesInteractions() {
+        Mockito.verifyNoInteractions(mockPrefs, mockEditor)
     }
 }
 
-// MOCK para validar se o interactor chamou corretamente o output
+// Mock implementation of the output interface
 class RegisterInteractorOutputMock : RegisterInteractorOutput {
     var didRegisterUser = false
 
@@ -75,6 +97,6 @@ class RegisterInteractorOutputMock : RegisterInteractorOutput {
     }
 
     override fun onRegisterFailure(error: String) {
-        // não precisa testar aqui
+        didRegisterUser = false
     }
 }

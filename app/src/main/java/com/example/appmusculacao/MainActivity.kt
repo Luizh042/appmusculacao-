@@ -3,7 +3,6 @@ package com.example.appmusculacao
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,7 +25,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.appmusculacao.ui.theme.AppmusculacaoTheme
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import java.time.LocalDate
@@ -68,16 +65,37 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController, startDestination = "register") {
                 composable("register") {
+                    val context = LocalContext.current //aqui e para usarmos o Toast
+
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
 
-                            var interactor = RegisterInteractor()
-                            interactor.register(name,password,email) // testado
-                            //sucesso
+                            val interactor = RegisterInteractor(context)
 
-                            //error
+                            interactor.output = object : RegisterInteractorOutput {
+                                override fun onRegisterSuccess(user: User) {
+                                    // Sucesso já estava implementado
+                                    Toast.makeText(
+                                        context,
+                                        "Usuario logado com sucesso",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    navController.navigate("login")
+                                }
 
-                                          },
+                                override fun onRegisterFailure(error: String) {
+                                    //erro no registro
+                                    Toast.makeText(
+                                        context,
+                                        "erro de registro: $error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+
+                            interactor.register(name, password, email) // testado
+
+                        },
                         onLoginClick = { navController.navigate("login") }
                     )
                 }

@@ -160,15 +160,28 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
     var currentStep by remember { mutableStateOf(1) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
         when (currentStep) {
             1 -> {
                 Text("Digite seu e-mail", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("E-mail") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { if (email.isNotBlank()) currentStep = 2 }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { if (email.isNotBlank()) currentStep = 2 },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Continuar")
                 }
                 TextButton(onClick = onBackToRegister) {
@@ -178,9 +191,47 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
             2 -> {
                 Text("Digite sua senha", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Senha") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { if (password.isNotBlank()) onLoginSuccess() }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = {
+                        if (password.isNotBlank()) {
+                            // Integração com o LoginInteractor testado
+                            val interactor = LoginInteractor()
+
+                            interactor.output = object : LoginInteractorOutput {
+                                override fun onLoginSuccess(user: User) {
+                                    // Sucesso no login
+                                    Toast.makeText(
+                                        context,
+                                        "Login realizado com sucesso!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onLoginSuccess() // Chama o callback original
+                                }
+
+                                override fun onLoginFailure(error: String) {
+                                    // Erro no login
+                                    Toast.makeText(
+                                        context,
+                                        "Erro: $error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+
+                            // Usa email como username (adaptação para seu caso)
+                            interactor.login(email, password)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Entrar")
                 }
                 TextButton(onClick = { currentStep = 1; password = "" }) {

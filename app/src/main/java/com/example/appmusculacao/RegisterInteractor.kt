@@ -27,13 +27,10 @@ class RegisterInteractor(private val context: Context) {
     fun login(username: String, password: String) {
         // Simula o registro e retorna sucesso
         if (username.isNotBlank() && password.isNotBlank()) {
-            val user = User(
-                id = "1",
-                username = username,
-                password = password,
-                email = ""
-            )
-            output?.onRegisterSuccess(user)
+            val user = User(id = "1", username = username, password = password, email = "")
+
+                output?.onRegisterSuccess(user)
+
         } else {
             output?.onRegisterFailure("Dados inválidos")
         }

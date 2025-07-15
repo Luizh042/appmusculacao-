@@ -227,7 +227,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
                             }
 
                             // Usa email como username (adaptação para seu caso)
-                            interactor.login(email, password)
+                            interactor.login(email, password, context)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()

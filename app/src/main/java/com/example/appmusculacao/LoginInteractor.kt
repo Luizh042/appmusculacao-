@@ -1,5 +1,6 @@
 package com.example.appmusculacao
 
+import android.content.Context
 
 
 interface LoginInteractorOutput {
@@ -7,22 +8,17 @@ interface LoginInteractorOutput {
     fun onLoginFailure(error: String)
 }
 
-// Classe principal do interactor
 class LoginInteractor {
-    var output: LoginInteractorOutput? = null
+    lateinit var output: LoginInteractorOutput
 
-    // email?
-    fun login(email: String, password: String) {
-        if (email.isNotBlank() && password.isNotBlank()) {
-            val user = User(
-                id = "1",
-                username = "",
-                password = password,
-                email = email // Assumindo que username é o email
-            )
-            output?.onLoginSuccess(user)
+    fun login(email: String, password: String, context: Context) {
+        val isValid = UserStorage.loginUser(context, email, password)
+
+        if (isValid) {
+            val name = UserStorage.getUserName(context) ?: "Usuário"
+            output.onLoginSuccess(User(name, email, "1", password))
         } else {
-            output?.onLoginFailure("Dados inválidos")
+            output.onLoginFailure("Email ou senha inválidos")
         }
     }
 }

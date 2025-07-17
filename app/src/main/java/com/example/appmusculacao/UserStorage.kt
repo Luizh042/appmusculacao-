@@ -22,4 +22,17 @@ object UserStorage {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .getString(KEY_EMAIL, null)
     }
+
+    fun loginUser(context: Context, email: String, password: String): Boolean {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val savedEmail = prefs.getString(KEY_EMAIL, null)
+        val savedPassword = prefs.getString(KEY_PASSWORD, null)
+
+        return email == savedEmail && password == savedPassword
+    }
+
+    fun getUserName(context: Context): String? {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_NAME, null)
+    }
 }

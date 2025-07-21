@@ -10,7 +10,16 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.junit.Assert.*
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.runner.RunWith
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
+import java.time.LocalDate
 
+//Test do Registro//
 class RegisterInteractorTest {
     private lateinit var interactor: RegisterInteractor
     private lateinit var mockOutput: RegisterInteractorOutputMock
@@ -321,3 +330,244 @@ class LoginInteractorTest {
         assertEquals("Should be second user", "user2", mockOutput.user?.username)
     }
 }
+//Test da Lista de exercício//
+@RunWith(AndroidJUnit4::class)
+class WorkoutScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private lateinit var mockOnGoToCalendar: () -> Unit
+    private lateinit var mockOnWorkoutMarked: (LocalDate) -> Unit
+
+    @Before
+    fun setup() {
+        mockOnGoToCalendar = mock()
+        mockOnWorkoutMarked = mock()
+    }
+
+    @Test
+    fun workoutScreen_displaysCorrectTitle() {
+        // Given
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText("Exercícios")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun workoutScreen_displaysAllExercises() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNodeWithText("Supino Reto")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Agachamento")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Rosca Direta")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Puxada Alta")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Remada Curvada")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithText("Desenvolvimento")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun workoutScreen_displaysCalendarButton() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText("Ver Calendário")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+    }
+
+    @Test
+    fun calendarButton_clickCallsOnGoToCalendar() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNodeWithText("Ver Calendário")
+            .performClick()
+
+
+        verify(mockOnGoToCalendar).invoke()
+    }
+
+    @Test
+    fun mainCheckbox_startsUnchecked() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .assertIsOff()
+    }
+
+    @Test
+    fun mainCheckbox_whenChecked_marksAllExercisesAsPaid() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .performClick()
+
+
+        verify(mockOnWorkoutMarked).invoke(LocalDate.now())
+    }
+
+    @Test
+    fun mainCheckbox_whenUnchecked_marksAllExercisesAsUnpaid() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .performClick()
+
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .performClick()
+
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .assertIsOff()
+    }
+
+    @Test
+    fun workoutScreen_displaysCurrentDate() {
+
+        val today = LocalDate.now()
+        val expectedDay = today.dayOfWeek.getDisplayName(
+            java.time.format.TextStyle.FULL,
+            java.util.Locale("pt", "BR")
+        ).replaceFirstChar { it.uppercase() }
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+        // Then
+        composeTestRule
+            .onNodeWithText(expectedDay)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun workoutScreen_displaysPaidLabel() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+
+        composeTestRule
+            .onNodeWithText("Pago:")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun workoutScreen_whenAllExercisesMarkedIndividually_callsOnWorkoutMarked() {
+
+        composeTestRule.setContent {
+            WorkoutScreen(
+                onGoToCalendar = mockOnGoToCalendar,
+                onWorkoutMarked = mockOnWorkoutMarked
+            )
+        }
+
+        composeTestRule
+            .onNode(hasText("Pago:"))
+            .onSiblings()
+            .filterToOne(hasClickAction())
+            .performClick()
+
+        // Then
+        verify(mockOnWorkoutMarked).invoke(LocalDate.now())
+    }
+}
+
+data class Exercise(
+    val name: String,
+    val reps: Int,
+    val sets: Int,
+    val weight: Int,
+    val paid: Boolean = false
+)

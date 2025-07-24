@@ -102,9 +102,6 @@ class RegisterInteractorOutputMock : RegisterInteractorOutput {
     }
 }
 
-<<<<<<< HEAD
-=======
-// Interfaces corrigidas
 interface LoginInteractorOutput {
     fun onLoginSuccess(user: User)
     fun onLoginFailure(error: String)
@@ -117,7 +114,7 @@ data class User(
     val email: String
 )
 
-// Implementação mais realista do LoginInteractor
+
 class LoginInteractor {
     var output: LoginInteractorOutput? = null
 
@@ -184,7 +181,6 @@ class LoginInteractorOutputMock : LoginInteractorOutput {
 }
 
 
->>>>>>> b506bcc5e5e28b5f2b212781595d5ba8acc30749
 class LoginInteractorTest {
     private lateinit var interactor: LoginInteractor
     private lateinit var mockOutput: LoginInteractorOutputMock
@@ -202,99 +198,6 @@ class LoginInteractorTest {
     }
 
     @Test
-<<<<<<< HEAD
-    fun `should login user with valid data`() {
-
-        val username = "test_user"
-        val password = "test123!@#"
-
-
-        interactor.login(username, password)
-
-
-        assertTrue("Output should indicate successful login", mockOutput.didLoginUser)
-        assertEquals("Username should match", username, mockOutput.user?.username)
-        assertEquals("Password should match", password, mockOutput.user?.password)
-    }
-
-    @Test
-    fun `should not login user with empty data`() {
-
-        val username = ""
-        val password = "test123!@#"
-
-
-        interactor.login(username, password)
-
-
-        assertFalse("Output should not indicate successful login", mockOutput.didLoginUser)
-        assertEquals("Error message should be set", "Dados inválidos", mockOutput.errorMessage)
-    }
-
-    @Test
-    fun `should not login user with blank username`() {
-
-        val username = "   "
-        val password = "test123!@#"
-
-
-        interactor.login(username, password)
-
-
-        assertFalse("Output should not indicate successful login", mockOutput.didLoginUser)
-        assertEquals("Error message should be set", "Dados inválidos", mockOutput.errorMessage)
-    }
-}
-
-
-class LoginInteractorOutputMock : LoginInteractorOutput {
-    var didLoginUser = false
-    var user: User? = null
-    var errorMessage: String? = null
-
-    override fun onRegisterSuccess(user: User) {
-        this.didLoginUser = true
-        this.user = user
-    }
-
-    override fun onRegisterFailure(error: String) {
-        this.didLoginUser = false
-        this.errorMessage = error
-    }
-}
-
-// Interfaces e classes necessárias
-interface LoginInteractorOutput {
-    fun onRegisterSuccess(user: User)
-    fun onRegisterFailure(error: String)
-}
-
-data class User(
-    val id: String,
-    val username: String,
-    val password: String,
-    val email: String
-)
-
-class LoginInteractor {
-    var output: LoginInteractorOutput? = null
-
-    fun login(username: String, password: String) {
-        // Simula o registro e retorna sucesso
-        if (username.isNotBlank() && password.isNotBlank()) {
-            val user = User(
-                id = "1",
-                username = username,
-                password = password,
-                email = ""
-            )
-            output?.onRegisterSuccess(user)
-        } else {
-            output?.onRegisterFailure("Dados inválidos")
-        }
-    }
-}
-=======
     fun `should login user with valid credentials`() {
 
         val email = "test@email.com"
@@ -417,4 +320,3 @@ class LoginInteractor {
         assertEquals("Should be second user", "user2", mockOutput.user?.username)
     }
 }
->>>>>>> b506bcc5e5e28b5f2b212781595d5ba8acc30749

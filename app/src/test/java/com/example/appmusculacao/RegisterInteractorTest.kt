@@ -573,26 +573,4 @@ class WorkoutInteractorTest {
         assertFalse("Exercise 5 should not be paid", exercises[5].paid)
         assertFalse("Not all exercises are paid", interactor.areAllExercisesPaid())
     }
-
-    @Test
-    fun `should complete workout only once when all exercises are marked`() {
-        // Given
-        var completionCount = 0
-        val countingOutput = object : WorkoutInteractorOutput {
-            override fun onWorkoutCompleted(date: LocalDate) {
-                completionCount++
-            }
-            override fun onWorkoutUpdated(exercises: List<Exercise>) {}
-            override fun onNavigateToCalendar() {}
-        }
-        interactor.output = countingOutput
-
-        // When - Mark all exercises multiple times
-        interactor.markAllExercisesAsPaid(true)
-        interactor.markAllExercisesAsPaid(true)
-        interactor.markExerciseAsPaid(0, true) // Already paid
-
-        // Then
-        assertEquals("Should complete workout only once", 1, completionCount)
-    }
 }

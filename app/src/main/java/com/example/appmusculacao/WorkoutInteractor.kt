@@ -1,5 +1,7 @@
 package com.example.appmusculacao
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import java.time.LocalDate
 
 data class WorkoutExercise(
@@ -32,22 +34,28 @@ class WorkoutInteractor {
 
     fun getExercises(): List<Exercise> = currentExercises
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun markExerciseAsPaid(exerciseIndex: Int, isPaid: Boolean) {
         if (exerciseIndex in currentExercises.indices) {
+            val wasWorkoutComplete = areAllExercisesPaid()
             currentExercises[exerciseIndex] = currentExercises[exerciseIndex].copy(paid = isPaid)
             output?.onWorkoutUpdated(currentExercises)
 
-            if (areAllExercisesPaid()) {
+            // Only trigger completion if workout wasn't complete before and is complete now
+            if (!wasWorkoutComplete && areAllExercisesPaid()) {
                 output?.onWorkoutCompleted(LocalDate.now())
             }
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun markAllExercisesAsPaid(isPaid: Boolean) {
+        val wasWorkoutComplete = areAllExercisesPaid()
         currentExercises = currentExercises.map { it.copy(paid = isPaid) }.toMutableList()
         output?.onWorkoutUpdated(currentExercises)
 
-        if (isPaid && areAllExercisesPaid()) {
+        // Only trigger completion if workout wasn't complete before and is complete now
+        if (!wasWorkoutComplete && isPaid && areAllExercisesPaid()) {
             output?.onWorkoutCompleted(LocalDate.now())
         }
     }

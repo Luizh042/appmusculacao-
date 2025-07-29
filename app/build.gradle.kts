@@ -48,7 +48,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -62,6 +61,8 @@ dependencies {
     implementation("com.kizitonwose.calendar:compose:2.4.0")
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.androidx.ui.test.junit4.android)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
     testImplementation ("junit:junit:4.13.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -74,4 +75,9 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
+    testImplementation ("androidx.room:room-testing:2.6.1")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation ("junit:junit:4.13.2")
+    testImplementation ("androidx.arch.core:core-testing:2.2.0")
+    implementation ("androidx.room:room-runtime:2.6.1")
 }

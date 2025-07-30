@@ -574,3 +574,4 @@ class WorkoutInteractorTest {
         assertFalse("Not all exercises are paid", interactor.areAllExercisesPaid())
     }
 }
+

@@ -73,4 +73,5 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
 }

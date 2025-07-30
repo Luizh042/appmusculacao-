@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -251,15 +252,25 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Un
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
 
-    val exercises = remember {
-        mutableStateListOf(
-            Exercise("Supino Reto", 12, 4, 60),
-            Exercise("Agachamento", 12, 3, 90),
-            Exercise("Rosca Direta", 15, 4, 45),
-            Exercise("Puxada Alta", 12, 4, 60),
-            Exercise("Remada Curvada", 10, 4, 60),
-            Exercise("Desenvolvimento", 12, 4, 60)
-        )
+    //Integração do Interactor
+    val interactor = remember { WorkoutInteractor() }
+    var exercises by remember { mutableStateOf(interactor.getExercises()) }
+
+    // Configurar o output do interactor
+    LaunchedEffect(interactor) {
+        interactor.output = object : WorkoutInteractorOutput {
+            override fun onWorkoutCompleted(date: LocalDate) {
+                onWorkoutMarked(date)
+            }
+
+            override fun onWorkoutUpdated(updatedExercises: List<Exercise>) {
+                exercises = updatedExercises // Atualiza o estado da UI
+            }
+
+            override fun onNavigateToCalendar() {
+                onGoToCalendar() //
+            }
+        }
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -272,10 +283,9 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Un
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Pago:")
             Checkbox(
-                checked = exercises.all { it.paid },
+                checked = interactor.areAllExercisesPaid(),
                 onCheckedChange = { isChecked ->
-                    exercises.indices.forEach { index -> exercises[index] = exercises[index].copy(paid = isChecked) }
-                    if (isChecked) onWorkoutMarked(dateNow)
+                    interactor.markAllExercisesAsPaid(isChecked)
                 }
             )
         }
@@ -284,14 +294,16 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Un
             ExerciseCard(
                 exercise = exercise,
                 onPaidChange = { isChecked ->
-                    exercises[index] = exercise.copy(paid = isChecked)
-                    if (exercises.all { it.paid }) onWorkoutMarked(dateNow)
+                    interactor.markExerciseAsPaid(index, isChecked)
                 }
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onGoToCalendar, modifier = Modifier.align(Alignment.CenterHorizontally)) {
+        Button(
+            onClick = { interactor.navigateToCalendar() },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
             Text("Ver Calendário")
         }
     }

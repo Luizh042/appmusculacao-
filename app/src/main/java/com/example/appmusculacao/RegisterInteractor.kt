@@ -33,7 +33,7 @@ class RegisterInteractor(private val context: Context) {
                 password = password,
                 email = ""
             )
-                output?.onRegisterSuccess(user)
+            output?.onRegisterSuccess(user)
         } else {
             output?.onRegisterFailure("Dados inválidos")
         }

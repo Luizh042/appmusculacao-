@@ -1,5 +1,7 @@
 package com.example.appmusculacao
 
+import java.util.UUID
+
 class ExerciseTest : ExerciseInteractorOutput {
 
     private val interactor = ExerciseInteractor()
@@ -8,8 +10,8 @@ class ExerciseTest : ExerciseInteractorOutput {
         interactor.output = this
 
         // Testes
-        interactor.addExercise("Flexão")
-        interactor.addExercise("Agachamento")
+        interactor.addExercise(Exercise(UUID.randomUUID().toString(), "Supino Reto", 12, 4, 60))
+        interactor.addExercise(Exercise(UUID.randomUUID().toString(), "Flexão", 12, 4, 60))
         interactor.listExercises()
         interactor.removeExercise("Flexão")
         interactor.listExercises()

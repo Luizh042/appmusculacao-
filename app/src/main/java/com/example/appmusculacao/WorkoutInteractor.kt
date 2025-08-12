@@ -3,6 +3,7 @@ package com.example.appmusculacao
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.time.LocalDate
+import java.util.UUID
 
 data class WorkoutExercise(
     val name: String,
@@ -22,12 +23,7 @@ class WorkoutInteractor {
     var output: WorkoutInteractorOutput? = null
 
     private val defaultExercises = listOf(
-        Exercise("Supino Reto", 12, 4, 60),
-        Exercise("Agachamento", 12, 3, 90),
-        Exercise("Rosca Direta", 15, 4, 45),
-        Exercise("Puxada Alta", 12, 4, 60),
-        Exercise("Remada Curvada", 10, 4, 60),
-        Exercise("Desenvolvimento", 12, 4, 60)
+        Exercise(UUID.randomUUID().toString(), "Supino Reto", 12, 4, 60),
     )
 
     private var currentExercises = defaultExercises.toMutableList()

@@ -4,25 +4,28 @@ class ExerciseInteractor {
 
     var output: ExerciseInteractorOutput? = null
 
-    private val exercises = mutableListOf<Exercise>()
+    private val exerciseList = mutableListOf<Exercise>()
 
-    fun addExercise(name: String) {
-        if (name.isBlank()) {
+    fun addExercise(exercise: Exercise) {
+        if (exercise.name.isBlank()) {
             output?.onFailure("Nome do exercício não pode ser vazio")
             return
         }
 
-        val newExercise = Exercises(
-            id = (exercises.size + 1).toString(),
-            name = name
+        val newExercise = Exercise(
+            name = exercise.name,
+            repetitions = exercise.repetitions,
+            series = exercise.series,
+            intervalSeconds = exercise.intervalSeconds,
+            muscleGroup = exercise.muscleGroup
         )
 
-        exercises.add(newExercise)
+        //exercise.add(newExercise)
         output?.onAddSuccess(newExercise)
     }
 
     fun removeExercise(name: String) {
-        val removed = exercises.removeIf { it.name.equals(name, ignoreCase = true) }
+        val removed = exerciseList.removeIf { it.name.equals(name, ignoreCase = true) }
 
         if (removed) {
             output?.onRemoveSuccess(name)
@@ -32,6 +35,6 @@ class ExerciseInteractor {
     }
 
     fun listExercises() {
-        output?.onListSuccess(exercises.toList())
+        output?.onListSuccess(exerciseList.toList())
     }
 }

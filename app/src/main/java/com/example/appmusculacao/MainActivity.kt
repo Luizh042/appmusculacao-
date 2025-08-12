@@ -53,6 +53,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -242,7 +243,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
     }
 }
 
-data class Exercise(val name: String, val repetitions: Int, val series: Int, val intervalSeconds: Int, var paid: Boolean = false)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -253,12 +253,7 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Un
 
     val exercises = remember {
         mutableStateListOf(
-            Exercise("Supino Reto", 12, 4, 60),
-            Exercise("Agachamento", 12, 3, 90),
-            Exercise("Rosca Direta", 15, 4, 45),
-            Exercise("Puxada Alta", 12, 4, 60),
-            Exercise("Remada Curvada", 10, 4, 60),
-            Exercise("Desenvolvimento", 12, 4, 60)
+            Exercise(UUID.randomUUID().toString(), "Supino Reto", 12, 4, 60),
         )
     }
 

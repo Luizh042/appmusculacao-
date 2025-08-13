@@ -1,26 +1,30 @@
 package com.example.appmusculacao
 
 import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import java.util.UUID
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.MockitoAnnotations
 
 class ExerciseListInteractorTest {
 
-    private lateinit var context: Context
     private lateinit var interactor: ExerciseListInteractor
     private lateinit var mockOutput: ExerciseListInteractorOutputMock
 
+    @Mock
+    private lateinit var mockContext: Context
+
     @Before
     fun setUp() {
-        // Contexto fake de teste
-        context = ApplicationProvider.getApplicationContext()
-        mockOutput = ExerciseListInteractorOutputMock()
+        MockitoAnnotations.openMocks(this)
+        setupInteractor()
+    }
 
-        // Cria interactor com contexto fake
-        interactor = ExerciseListInteractor(context)
+    private fun setupInteractor() {
+        mockOutput = ExerciseListInteractorOutputMock()
+        interactor = ExerciseListInteractor(mockContext) // usa o contexto mockado
         interactor.output = mockOutput
     }
 

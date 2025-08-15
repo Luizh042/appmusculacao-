@@ -25,7 +25,9 @@ class ExerciseListInteractor(private val context: Context) {
     }
 
     fun deleteExercise(id: String) {
-        exercises.removeAll { it.id == id }
-        output?.onExerciseDeleted(id)
+        val removed = exercises.removeIf { it.id == id }
+        if (removed) {
+            output?.onExerciseDeleted(id)
+        }
     }
 }

@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
                 composable("workout") {
                     WorkoutScreen(
                         onGoToCalendar = { navController.navigate("calendar") },
+                        onGoToExerciseList = { navController.navigate("exercise_list") },
                         onWorkoutMarked = { date ->
                             if (!markedDates.contains(date)) {
                                 markedDates.add(date)
@@ -121,6 +122,9 @@ class MainActivity : ComponentActivity() {
                 }
                 composable("calendar") {
                     CalendarScreen(markedDates = markedDates)
+                }
+                composable("exercise_list") {
+                    ExerciseListView(context = LocalContext.current)
                 }
             }
         }
@@ -195,7 +199,7 @@ data class Exercise(val name: String, val repetitions: Int, val series: Int, val
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Unit) {
+fun WorkoutScreen(onGoToCalendar: () -> Unit, onGoToExerciseList: () -> Unit, onWorkoutMarked: (LocalDate) -> Unit) {
     val dateNow = LocalDate.now()
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
@@ -240,8 +244,23 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onWorkoutMarked: (LocalDate) -> Un
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onGoToCalendar, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("Ver Calendário")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(
+                onClick = onGoToCalendar,
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
+                Text("Ver Calendário")
+            }
+
+            Button(
+                onClick = onGoToExerciseList, // NOVO BOTÃO
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            ) {
+                Text("Gerenciar Exercícios")
+            }
         }
     }
 }
@@ -353,38 +372,160 @@ fun ExerciseFormView(
     var series by remember { mutableStateOf(initial?.series?.toString() ?: "") }
     var intervalo by remember { mutableStateOf(initial?.intervalo?.toString() ?: "") }
 
+    // Estado para mostrar mensagens de erro
+    var errorMessage by remember { mutableStateOf("") }
+
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Formulário de Exercício", fontWeight = FontWeight.Bold, fontSize = 20.sp)
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nome") })
-        OutlinedTextField(value = repeticoes, onValueChange = { repeticoes = it }, label = { Text("Repetições") })
-        OutlinedTextField(value = series, onValueChange = { series = it }, label = { Text("Séries") })
-        OutlinedTextField(value = intervalo, onValueChange = { intervalo = it }, label = { Text("Intervalo (s)") })
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = {
+                name = it
+                errorMessage = "" // Limpa erro ao digitar
+            },
+            label = { Text("Nome") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = repeticoes,
+            onValueChange = {
+                // Permite apenas números
+                if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                    repeticoes = it
+                    errorMessage = ""
+                }
+            },
+            label = { Text("Repetições") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = series,
+            onValueChange = {
+                // Permite apenas números
+                if (it.isEmpty() || it.all { char -> char.isDigit() }) {
+                    series = it
+                    errorMessage = ""
+                }
+            },
+            label = { Text("Séries") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = intervalo,
+            onValueChange = {
+                // Permite números e ponto decimal
+                if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                    intervalo = it
+                    errorMessage = ""
+                }
+            },
+            label = { Text("Intervalo (segundos)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = pago, onCheckedChange = { pago = it })
             Text("Pago")
         }
 
+        // Mostra mensagem de erro se houver
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            if (name.isNotBlank() && repeticoes.isNotBlank() && series.isNotBlank() && intervalo.isNotBlank()) {
-                onSave(
-                    ExerciseModel(
-                        name,
-                        pago,
-                        repeticoes.toInt(),
-                        series.toInt(),
-                        intervalo.toDouble()
+        Button(
+            onClick = {
+                try {
+                    // Validações
+                    when {
+                        name.isBlank() -> {
+                            errorMessage = "Nome do exercício é obrigatório"
+                            return@Button
+                        }
+                        repeticoes.isBlank() -> {
+                            errorMessage = "Número de repetições é obrigatório"
+                            return@Button
+                        }
+                        series.isBlank() -> {
+                            errorMessage = "Número de séries é obrigatório"
+                            return@Button
+                        }
+                        intervalo.isBlank() -> {
+                            errorMessage = "Intervalo é obrigatório"
+                            return@Button
+                        }
+                    }
+
+                    // Converte os valores com tratamento de erro
+                    val repeticoesInt = repeticoes.toIntOrNull()
+                    val seriesInt = series.toIntOrNull()
+                    val intervaloDouble = intervalo.toDoubleOrNull()
+
+                    // Verifica se as conversões foram bem-sucedidas
+                    when {
+                        repeticoesInt == null || repeticoesInt <= 0 -> {
+                            errorMessage = "Repetições deve ser um número válido maior que 0"
+                            return@Button
+                        }
+                        seriesInt == null || seriesInt <= 0 -> {
+                            errorMessage = "Séries deve ser um número válido maior que 0"
+                            return@Button
+                        }
+                        intervaloDouble == null || intervaloDouble < 0 -> {
+                            errorMessage = "Intervalo deve ser um número válido maior ou igual a 0"
+                            return@Button
+                        }
+                    }
+
+                    // Se chegou até aqui, todos os dados são válidos
+                    val exercise = ExerciseModel(
+                        name = name.trim(),
+                        pago = pago,
+                        repeticoes = repeticoesInt,
+                        series = seriesInt,
+                        intervalo = intervaloDouble
                     )
-                )
-            }
-        }) {
+
+                    onSave(exercise)
+
+                } catch (e: Exception) {
+                    errorMessage = "Erro ao salvar exercício: ${e.message}"
+                }
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Salvar")
         }
 
-        TextButton(onClick = onCancel) {
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(
+            onClick = onCancel,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Cancelar")
         }
     }

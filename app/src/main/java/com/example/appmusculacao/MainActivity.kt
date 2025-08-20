@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController, startDestination = "register") {
                 composable("register") {
-                    val context = LocalContext.current //aqui e para usarmos o Toast
+                    val context = LocalContext.current
 
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
@@ -74,7 +75,6 @@ class MainActivity : ComponentActivity() {
 
                             interactor.output = object : RegisterInteractorOutput {
                                 override fun onRegisterSuccess(user: User) {
-                                    // Sucesso já estava implementado
                                     Toast.makeText(
                                         context,
                                         "Usuario logado com sucesso",
@@ -84,7 +84,6 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 override fun onRegisterFailure(error: String) {
-                                    //erro no registro
                                     Toast.makeText(
                                         context,
                                         "erro de registro: $error",
@@ -197,9 +196,34 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
 
 data class Exercise(val name: String, val repetitions: Int, val series: Int, val intervalSeconds: Int, var paid: Boolean = false)
 
+data class ExerciseModel(
+    val name: String,
+    val pago: Boolean,
+    val repeticoes: Int,
+    val series: Int,
+    val intervalo: Double
+)
+
+// CLASSE PARA UNIFICAR OS TIPOS DE EXERCÍCIO
+data class UnifiedExercise(
+    val name: String,
+    val repetitions: Int,
+    val series: Int,
+    val intervalSeconds: Int,
+    val paid: Boolean
+)
+
+// EXTENSÕES PARA CONVERTER ENTRE OS TIPOS
+fun Exercise.toUnified() = UnifiedExercise(name, repetitions, series, intervalSeconds, paid)
+fun ExerciseModel.toUnified() = UnifiedExercise(name, repeticoes, series, intervalo.toInt(), pago)
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun WorkoutScreen(onGoToCalendar: () -> Unit, onGoToExerciseList: () -> Unit, onWorkoutMarked: (LocalDate) -> Unit) {
+fun WorkoutScreen(
+    onGoToCalendar: () -> Unit,
+    onGoToExerciseList: () -> Unit,
+    onWorkoutMarked: (LocalDate) -> Unit
+) {
     val dateNow = LocalDate.now()
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
@@ -234,16 +258,19 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onGoToExerciseList: () -> Unit, on
         }
 
         exercises.forEachIndexed { index, exercise ->
+            // USANDO O EXERCISECARD UNIFICADO - SEM BOTÃO REMOVER
             ExerciseCard(
-                exercise = exercise,
+                exercise = exercise.toUnified(),
                 onPaidChange = { isChecked ->
                     exercises[index] = exercise.copy(paid = isChecked)
                     if (exercises.all { it.paid }) onWorkoutMarked(dateNow)
                 }
+                // onRemove não é passado, então não aparece botão remover
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -256,7 +283,7 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onGoToExerciseList: () -> Unit, on
             }
 
             Button(
-                onClick = onGoToExerciseList, // NOVO BOTÃO
+                onClick = onGoToExerciseList,
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
                 Text("Gerenciar Exercícios")
@@ -266,25 +293,79 @@ fun WorkoutScreen(onGoToCalendar: () -> Unit, onGoToExerciseList: () -> Unit, on
 }
 
 @Composable
-fun ExerciseCard(exercise: Exercise, onPaidChange: (Boolean) -> Unit) {
+fun ExerciseCard(
+    exercise: UnifiedExercise,
+    onPaidChange: (Boolean) -> Unit,
+    onRemove: (() -> Unit)? = null // PARÂMETRO OPCIONAL
+) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(exercise.name, style = MaterialTheme.typography.titleMedium)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Pago: ")
-                    Checkbox(checked = exercise.paid, onCheckedChange = onPaidChange)
+            // CABEÇALHO - NOME E BOTÃO REMOVER (SE DISPONÍVEL)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    exercise.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+
+                // SÓ MOSTRA O BOTÃO REMOVER SE onRemove FOR FORNECIDO
+                if (onRemove != null) {
+                    TextButton(
+                        onClick = onRemove,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color.Red
+                        )
+                    ) {
+                        Text("Remover", fontSize = 12.sp)
+                    }
+                } else {
+                    // SE NÃO TEM BOTÃO REMOVER, MOSTRA O CHECKBOX À DIREITA
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Pago: ")
+                        Checkbox(checked = exercise.paid, onCheckedChange = onPaidChange)
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+
+            // INFORMAÇÕES DO EXERCÍCIO
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text("Repetições: ${exercise.repetitions}")
-                Text("Séries: ${exercise.series}", color = Color(0xFFCCE075))
-                Text("Intervalo: ${exercise.intervalSeconds}s", color = Color(0xFFFFBDBD))
+                Text(
+                    "Séries: ${exercise.series}",
+                    color = Color(0xFFCCE075)
+                )
+                Text(
+                    "Intervalo: ${exercise.intervalSeconds}s",
+                    color = Color(0xFFFFBDBD)
+                )
+            }
+
+            // SE TEM BOTÃO REMOVER, CHECKBOX VAI EMBAIXO
+            if (onRemove != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Pago: ")
+                    Checkbox(
+                        checked = exercise.paid,
+                        onCheckedChange = onPaidChange
+                    )
+                }
             }
         }
     }
@@ -336,14 +417,6 @@ fun CalendarScreen(markedDates: List<LocalDate>) {
         }
     }
 }
-
-data class ExerciseModel(
-    val name: String,
-    val pago: Boolean,
-    val repeticoes: Int,
-    val series: Int,
-    val intervalo: Double
-)
 
 class ExerciseStore(context: Context) {
     private val prefs = context.getSharedPreferences("exercises", Context.MODE_PRIVATE)
@@ -539,32 +612,60 @@ fun ExerciseListView(context: Context) {
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Lista de Exercícios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // USANDO O EXERCISECARD UNIFICADO - COM BOTÃO REMOVER
         exercises.forEachIndexed { index, exercise ->
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("${exercise.name} (${exercise.series}x${exercise.repeticoes}) - ${exercise.intervalo}s")
-                TextButton(onClick = {
+            ExerciseCard(
+                exercise = exercise.toUnified(),
+                onPaidChange = { isChecked ->
+                    exercises[index] = exercise.copy(pago = isChecked)
+                    store.save(exercises)
+                },
+                onRemove = { // PASSANDO onRemove PARA MOSTRAR BOTÃO
                     exercises.removeAt(index)
                     store.save(exercises)
-                }) {
-                    Text("Remover")
+                }
+            )
+        }
+
+        if (exercises.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Nenhum exercício cadastrado",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray
+                    )
+                    Text(
+                        "Clique em 'Adicionar Exercício' para começar",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { showForm = true }) {
+        Button(
+            onClick = { showForm = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Adicionar Exercício")
         }
 
         if (showForm) {
+            Spacer(modifier = Modifier.height(16.dp))
             ExerciseFormView(
-                onSave = {
-                    exercises.add(it)
+                onSave = { newExercise ->
+                    exercises.add(newExercise)
                     store.save(exercises)
                     showForm = false
                 },

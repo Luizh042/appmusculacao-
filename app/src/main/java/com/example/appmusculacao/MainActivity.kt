@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -54,6 +56,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -224,22 +227,62 @@ fun WorkoutScreen(
     onGoToExerciseList: () -> Unit,
     onWorkoutMarked: (LocalDate) -> Unit
 ) {
+    val context = LocalContext.current
     val dateNow = LocalDate.now()
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
 
-    val exercises = remember {
-        mutableStateListOf(
-            Exercise("Supino Reto", 12, 4, 60),
-            Exercise("Agachamento", 12, 3, 90),
-            Exercise("Rosca Direta", 15, 4, 45),
-            Exercise("Puxada Alta", 12, 4, 60),
-            Exercise("Remada Curvada", 10, 4, 60),
-            Exercise("Desenvolvimento", 12, 4, 60)
+    val defaultExercises = listOf(
+        Exercise("Supino Reto", 12, 4, 60),
+        Exercise("Agachamento", 12, 3, 90),
+        Exercise("Rosca Direta", 15, 4, 45),
+        Exercise("Puxada Alta", 12, 4, 60),
+        Exercise("Remada Curvada", 10, 4, 60),
+        Exercise("Desenvolvimento", 12, 4, 60)
+    )
+
+    val store = remember { ExerciseStore(context) }
+    val savedExercises = remember { store.load() }
+
+    val convertedSavedExercises = savedExercises.map { saved ->
+        Exercise(
+            name = saved.name,
+            repetitions = saved.repeticoes,
+            series = saved.series,
+            intervalSeconds = saved.intervalo.toInt(),
+            paid = saved.pago
         )
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    val allExercises = remember {
+        mutableStateListOf<Exercise>().apply {
+            addAll(defaultExercises)
+            addAll(convertedSavedExercises)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val freshSavedExercises = store.load()
+        val freshConvertedExercises = freshSavedExercises.map { saved ->
+            Exercise(
+                name = saved.name,
+                repetitions = saved.repeticoes,
+                series = saved.series,
+                intervalSeconds = saved.intervalo.toInt(),
+                paid = saved.pago
+            )
+        }
+
+        allExercises.clear()
+        allExercises.addAll(defaultExercises)
+        allExercises.addAll(freshConvertedExercises)
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Text("Exercícios", style = MaterialTheme.typography.headlineSmall)
         Text(dayOfWeek.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium)
         Text(formattedDate, style = MaterialTheme.typography.bodySmall)
@@ -249,23 +292,23 @@ fun WorkoutScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Pago:")
             Checkbox(
-                checked = exercises.all { it.paid },
+                checked = allExercises.all { it.paid },
                 onCheckedChange = { isChecked ->
-                    exercises.indices.forEach { index -> exercises[index] = exercises[index].copy(paid = isChecked) }
+                    allExercises.indices.forEach { index ->
+                        allExercises[index] = allExercises[index].copy(paid = isChecked)
+                    }
                     if (isChecked) onWorkoutMarked(dateNow)
                 }
             )
         }
 
-        exercises.forEachIndexed { index, exercise ->
-            // USANDO O EXERCISECARD UNIFICADO - SEM BOTÃO REMOVER
+        allExercises.forEachIndexed { index, exercise ->
             ExerciseCard(
                 exercise = exercise.toUnified(),
                 onPaidChange = { isChecked ->
-                    exercises[index] = exercise.copy(paid = isChecked)
-                    if (exercises.all { it.paid }) onWorkoutMarked(dateNow)
+                    allExercises[index] = exercise.copy(paid = isChecked)
+                    if (allExercises.all { it.paid }) onWorkoutMarked(dateNow)
                 }
-                // onRemove não é passado, então não aparece botão remover
             )
         }
 
@@ -610,7 +653,12 @@ fun ExerciseListView(context: Context) {
     val exercises = remember { mutableStateListOf<ExerciseModel>().apply { addAll(store.load()) } }
     var showForm by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
         Text("Lista de Exercícios", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -628,6 +676,7 @@ fun ExerciseListView(context: Context) {
                 }
             )
         }
+
 
         if (exercises.isEmpty()) {
             Card(

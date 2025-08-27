@@ -43,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
@@ -56,7 +55,6 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -73,7 +71,6 @@ class MainActivity : ComponentActivity() {
 
                     RegisterScreen(
                         onRegisterClick = { name, email, password ->
-
                             val interactor = RegisterInteractor(context)
 
                             interactor.output = object : RegisterInteractorOutput {
@@ -95,8 +92,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            interactor.register(name, password, email) // testado
-
+                            interactor.register(name, password, email)
                         },
                         onLoginClick = { navController.navigate("login") }
                     )
@@ -197,6 +193,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
     }
 }
 
+// DATA CLASSES PARA DIFERENTES TIPOS DE EXERCÍCIO
 data class Exercise(val name: String, val repetitions: Int, val series: Int, val intervalSeconds: Int, var paid: Boolean = false)
 
 data class ExerciseModel(
@@ -232,6 +229,7 @@ fun WorkoutScreen(
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
 
+    // EXERCÍCIOS PADRÃO (FIXOS)
     val defaultExercises = listOf(
         Exercise("Supino Reto", 12, 4, 60),
         Exercise("Agachamento", 12, 3, 90),
@@ -241,9 +239,11 @@ fun WorkoutScreen(
         Exercise("Desenvolvimento", 12, 4, 60)
     )
 
+    // CARREGAR EXERCÍCIOS SALVOS E COMBINÁ-LOS COM OS PADRÃO
     val store = remember { ExerciseStore(context) }
     val savedExercises = remember { store.load() }
 
+    // CONVERTER EXERCÍCIOS SALVOS PARA O TIPO Exercise
     val convertedSavedExercises = savedExercises.map { saved ->
         Exercise(
             name = saved.name,
@@ -254,35 +254,15 @@ fun WorkoutScreen(
         )
     }
 
-    val allExercises = remember {
+    // RECARREGAR EXERCÍCIOS SEMPRE QUE A TELA FOR RECOMPOSTA
+    val allExercises = remember(savedExercises) {
         mutableStateListOf<Exercise>().apply {
             addAll(defaultExercises)
             addAll(convertedSavedExercises)
         }
     }
 
-    LaunchedEffect(Unit) {
-        val freshSavedExercises = store.load()
-        val freshConvertedExercises = freshSavedExercises.map { saved ->
-            Exercise(
-                name = saved.name,
-                repetitions = saved.repeticoes,
-                series = saved.series,
-                intervalSeconds = saved.intervalo.toInt(),
-                paid = saved.pago
-            )
-        }
-
-        allExercises.clear()
-        allExercises.addAll(defaultExercises)
-        allExercises.addAll(freshConvertedExercises)
-    }
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
+    Column(modifier = Modifier.padding(16.dp)) {
         Text("Exercícios", style = MaterialTheme.typography.headlineSmall)
         Text(dayOfWeek.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodyMedium)
         Text(formattedDate, style = MaterialTheme.typography.bodySmall)
@@ -303,12 +283,14 @@ fun WorkoutScreen(
         }
 
         allExercises.forEachIndexed { index, exercise ->
+            // USANDO O EXERCISECARD UNIFICADO - SEM BOTÃO REMOVER
             ExerciseCard(
                 exercise = exercise.toUnified(),
                 onPaidChange = { isChecked ->
                     allExercises[index] = exercise.copy(paid = isChecked)
                     if (allExercises.all { it.paid }) onWorkoutMarked(dateNow)
                 }
+                // onRemove não é passado, então não aparece botão remover
             )
         }
 
@@ -335,6 +317,7 @@ fun WorkoutScreen(
     }
 }
 
+// EXERCISECARD UNIFICADO - FUNCIONA PARA AMBAS AS TELAS
 @Composable
 fun ExerciseCard(
     exercise: UnifiedExercise,
@@ -488,7 +471,6 @@ fun ExerciseFormView(
     var series by remember { mutableStateOf(initial?.series?.toString() ?: "") }
     var intervalo by remember { mutableStateOf(initial?.intervalo?.toString() ?: "") }
 
-    // Estado para mostrar mensagens de erro
     var errorMessage by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -500,7 +482,7 @@ fun ExerciseFormView(
             value = name,
             onValueChange = {
                 name = it
-                errorMessage = "" // Limpa erro ao digitar
+                errorMessage = ""
             },
             label = { Text("Nome") },
             modifier = Modifier.fillMaxWidth()
@@ -511,7 +493,6 @@ fun ExerciseFormView(
         OutlinedTextField(
             value = repeticoes,
             onValueChange = {
-                // Permite apenas números
                 if (it.isEmpty() || it.all { char -> char.isDigit() }) {
                     repeticoes = it
                     errorMessage = ""
@@ -527,7 +508,6 @@ fun ExerciseFormView(
         OutlinedTextField(
             value = series,
             onValueChange = {
-                // Permite apenas números
                 if (it.isEmpty() || it.all { char -> char.isDigit() }) {
                     series = it
                     errorMessage = ""
@@ -543,7 +523,6 @@ fun ExerciseFormView(
         OutlinedTextField(
             value = intervalo,
             onValueChange = {
-                // Permite números e ponto decimal
                 if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
                     intervalo = it
                     errorMessage = ""
@@ -561,7 +540,6 @@ fun ExerciseFormView(
             Text("Pago")
         }
 
-        // Mostra mensagem de erro se houver
         if (errorMessage.isNotEmpty()) {
             Text(
                 text = errorMessage,
@@ -575,7 +553,6 @@ fun ExerciseFormView(
         Button(
             onClick = {
                 try {
-                    // Validações
                     when {
                         name.isBlank() -> {
                             errorMessage = "Nome do exercício é obrigatório"
@@ -595,12 +572,10 @@ fun ExerciseFormView(
                         }
                     }
 
-                    // Converte os valores com tratamento de erro
                     val repeticoesInt = repeticoes.toIntOrNull()
                     val seriesInt = series.toIntOrNull()
                     val intervaloDouble = intervalo.toDoubleOrNull()
 
-                    // Verifica se as conversões foram bem-sucedidas
                     when {
                         repeticoesInt == null || repeticoesInt <= 0 -> {
                             errorMessage = "Repetições deve ser um número válido maior que 0"
@@ -616,7 +591,6 @@ fun ExerciseFormView(
                         }
                     }
 
-                    // Se chegou até aqui, todos os dados são válidos
                     val exercise = ExerciseModel(
                         name = name.trim(),
                         pago = pago,
@@ -647,6 +621,7 @@ fun ExerciseFormView(
     }
 }
 
+// EXERCISELISTVIEW COM SCROLL
 @Composable
 fun ExerciseListView(context: Context) {
     val store = remember { ExerciseStore(context) }
@@ -676,7 +651,6 @@ fun ExerciseListView(context: Context) {
                 }
             )
         }
-
 
         if (exercises.isEmpty()) {
             Card(
@@ -722,16 +696,4 @@ fun ExerciseListView(context: Context) {
             )
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun RegisterScreenPreview(){
-    RegisterScreen(
-        onRegisterClick = {name, _, _ ->
-            println("login ${name.uppercase()}")
-        },
-        onLoginClick = {}
-    )
-
 }

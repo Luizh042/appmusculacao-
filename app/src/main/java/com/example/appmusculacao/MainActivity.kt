@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -339,10 +340,14 @@ fun WorkoutScreen(
 fun ExerciseCard(
     exercise: UnifiedExercise,
     onPaidChange: (Boolean) -> Unit,
-    onRemove: (() -> Unit)? = null // PARÂMETRO OPCIONAL
+    onRemove: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null // NOVO PARÂMETRO OPCIONAL
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .let { if (onClick != null) it.clickable { onClick() } else it }, // Torna clicável se onClick fornecido
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -652,6 +657,7 @@ fun ExerciseListView(context: Context) {
     val store = remember { ExerciseStore(context) }
     val exercises = remember { mutableStateListOf<ExerciseModel>().apply { addAll(store.load()) } }
     var showForm by remember { mutableStateOf(false) }
+    var editingIndex by remember { mutableStateOf<Int?>(null) } // NOVO: índice do exercício sendo editado
 
     Column(
         modifier = Modifier
@@ -673,6 +679,10 @@ fun ExerciseListView(context: Context) {
                 onRemove = { // PASSANDO onRemove PARA MOSTRAR BOTÃO
                     exercises.removeAt(index)
                     store.save(exercises)
+                },
+                onClick = { // NOVO: abre formulário de edição
+                    editingIndex = index
+                    showForm = true
                 }
             )
         }
@@ -713,12 +723,21 @@ fun ExerciseListView(context: Context) {
         if (showForm) {
             Spacer(modifier = Modifier.height(16.dp))
             ExerciseFormView(
+                initial = editingIndex?.let { exercises[it] }, // Se estiver editando, passa o exercício
                 onSave = { newExercise ->
-                    exercises.add(newExercise)
+                    if (editingIndex != null) {
+                        exercises[editingIndex!!] = newExercise // Atualiza exercício editado
+                        editingIndex = null
+                    } else {
+                        exercises.add(newExercise) // Adiciona novo exercício
+                    }
                     store.save(exercises)
                     showForm = false
                 },
-                onCancel = { showForm = false }
+                onCancel = {
+                    showForm = false
+                    editingIndex = null
+                }
             )
         }
     }

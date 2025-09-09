@@ -1,8 +1,10 @@
 package com.example.appmusculacao
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -122,9 +124,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     )
-                }
-                composable("calendar") {
-                    CalendarScreen(markedDates = markedDates)
                 }
                 composable("exercise_list") {
                     ExerciseListView(context = LocalContext.current)
@@ -320,7 +319,7 @@ fun WorkoutScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = onGoToCalendar,
+                onClick = { openAndroidCalendar(context) },
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
                 Text("Ver Calendário")
@@ -413,53 +412,6 @@ fun ExerciseCard(
                         checked = exercise.paid,
                         onCheckedChange = onPaidChange
                     )
-                }
-            }
-        }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun CalendarScreen(markedDates: List<LocalDate>) {
-    val currentMonth = remember { YearMonth.now() }
-    val daysInMonth = currentMonth.lengthOfMonth()
-    val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value % 7
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Calendário de Exercícios", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-            Text(currentMonth.month.getDisplayName(TextStyle.FULL, Locale("pt", "BR")).replaceFirstChar { it.uppercase() })
-            Text("${currentMonth.year}")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        val days = (1..daysInMonth).map { day -> currentMonth.atDay(day) }
-
-        Column {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                listOf("D", "S", "T", "Q", "Q", "S", "S").forEach {
-                    Text(it, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                }
-            }
-
-            days.chunked(7).forEach { week ->
-                Row(Modifier.fillMaxWidth()) {
-                    week.forEach { date ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(4.dp)
-                                .background(if (markedDates.contains(date)) Color.Green else Color.LightGray)
-                                .height(40.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("${date.dayOfMonth}", color = Color.Black)
-                        }
-                    }
                 }
             }
         }
@@ -742,6 +694,26 @@ fun ExerciseListView(context: Context) {
         }
     }
 }
+
+fun openAndroidCalendar(context: Context) {
+    try {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_APP_CALENDAR)
+            setPackage("com.google.android.calendar") // força abrir o Google Agenda
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        // Verifica se o app existe
+        if (intent.resolveActivity(context.packageManager) != null) {
+            context.startActivity(intent)
+        } else {
+            Toast.makeText(context, "Google Agenda não encontrado neste dispositivo", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Erro ao abrir Google Agenda: ${e.message}", Toast.LENGTH_SHORT).show()
+    }
+}
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

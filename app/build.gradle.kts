@@ -62,6 +62,7 @@ dependencies {
     implementation("com.kizitonwose.calendar:compose:2.4.0")
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.androidx.ui.test.junit4.android)
+    implementation(libs.androidx.foundation)
     testImplementation ("junit:junit:4.13.2")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

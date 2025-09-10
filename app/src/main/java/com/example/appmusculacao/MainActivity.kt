@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -166,15 +167,28 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
     var currentStep by remember { mutableStateOf(1) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
         when (currentStep) {
             1 -> {
                 Text("Digite seu e-mail", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("E-mail") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { if (email.isNotBlank()) currentStep = 2 }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { if (email.isNotBlank()) currentStep = 2 },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Continuar")
                 }
                 TextButton(onClick = onBackToRegister) {
@@ -184,9 +198,47 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onBackToRegister: () -> Unit) {
             2 -> {
                 Text("Digite sua senha", style = MaterialTheme.typography.headlineMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Senha") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { if (password.isNotBlank()) onLoginSuccess() }, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = {
+                        if (password.isNotBlank()) {
+                            // Integração com o LoginInteractor testado
+                            val interactor = LoginInteractor()
+
+                            interactor.output = object : LoginInteractorOutput {
+                                override fun onLoginSuccess(user: User) {
+                                    // Sucesso no login
+                                    Toast.makeText(
+                                        context,
+                                        "Login realizado com sucesso!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    onLoginSuccess() // Chama o callback original
+                                }
+
+                                override fun onLoginFailure(error: String) {
+                                    // Erro no login
+                                    Toast.makeText(
+                                        context,
+                                        "Erro: $error",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+
+                            // Usa email como username (adaptação para seu caso)
+                            interactor.login(email, password, context)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Entrar")
                 }
                 TextButton(onClick = { currentStep = 1; password = "" }) {
@@ -232,6 +284,7 @@ fun WorkoutScreen(
     val dayOfWeek = dateNow.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
     val formattedDate = dateNow.format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR")))
 
+ feature/crud
     val defaultExercises = listOf(
         Exercise("Supino Reto", 12, 4, 60),
         Exercise("Agachamento", 12, 3, 90),
@@ -252,6 +305,27 @@ fun WorkoutScreen(
             intervalSeconds = saved.intervalo.toInt(),
             paid = saved.pago
         )
+
+    //Integração do Interactor
+    val interactor = remember { WorkoutInteractor() }
+    var exercises by remember { mutableStateOf(interactor.getExercises()) }
+
+    // Configurar o output do interactor
+    LaunchedEffect(interactor) {
+        interactor.output = object : WorkoutInteractorOutput {
+            override fun onWorkoutCompleted(date: LocalDate) {
+                onWorkoutMarked(date)
+            }
+
+            override fun onWorkoutUpdated(updatedExercises: List<Exercise>) {
+                exercises = updatedExercises // Atualiza o estado da UI
+            }
+
+            override fun onNavigateToCalendar() {
+                onGoToCalendar() //
+            }
+        }
+ main
     }
 
     val allExercises = remember {
@@ -331,6 +405,12 @@ fun WorkoutScreen(
             ) {
                 Text("Gerenciar Exercícios")
             }
+
+        Button(
+            onClick = { interactor.navigateToCalendar() },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Ver Calendário")
         }
     }
 }

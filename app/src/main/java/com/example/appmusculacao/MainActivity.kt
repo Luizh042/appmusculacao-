@@ -699,18 +699,11 @@ fun openAndroidCalendar(context: Context) {
     try {
         val intent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_APP_CALENDAR)
-            setPackage("com.google.android.calendar") // força abrir o Google Agenda
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-
-        // Verifica se o app existe
-        if (intent.resolveActivity(context.packageManager) != null) {
-            context.startActivity(intent)
-        } else {
-            Toast.makeText(context, "Google Agenda não encontrado neste dispositivo", Toast.LENGTH_SHORT).show()
-        }
+        context.startActivity(intent)
     } catch (e: Exception) {
-        Toast.makeText(context, "Erro ao abrir Google Agenda: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Nenhum aplicativo de calendário encontrado", Toast.LENGTH_SHORT).show()
     }
 }
 

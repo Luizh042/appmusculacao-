@@ -319,18 +319,26 @@ fun WorkoutScreen(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             Button(
-                onClick = { openAndroidCalendar(context) },
+                onClick = onGoToCalendar, // calendário interno
                 modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
-                Text("Ver Calendário")
+                Text("Calendário Interno")
             }
 
             Button(
-                onClick = onGoToExerciseList,
+                onClick = { openAndroidCalendar(context) }, // calendário externo
                 modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
-                Text("Gerenciar Exercícios")
+                Text("Google Agenda")
             }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onGoToExerciseList,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Gerenciar Exercícios")
         }
     }
 }
@@ -697,11 +705,20 @@ fun ExerciseListView(context: Context) {
 
 fun openAndroidCalendar(context: Context) {
     try {
+        // Tenta abrir Google Agenda
+        val launchIntent = context.packageManager.getLaunchIntentForPackage("com.google.android.calendar")
+        if (launchIntent != null) {
+            context.startActivity(launchIntent)
+            return
+        }
+
+        // Se não achar, abre o calendário padrão do sistema
         val intent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_APP_CALENDAR)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         context.startActivity(intent)
+
     } catch (e: Exception) {
         Toast.makeText(context, "Nenhum aplicativo de calendário encontrado", Toast.LENGTH_SHORT).show()
     }
